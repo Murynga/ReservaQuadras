@@ -1,0 +1,26 @@
+{
+  "name": "reservaquadras",
+  "version": "1.0.0",
+  "description": "Uma API direcionada a permitir a reserva e visualização de reservas de quadras, inicialmente direcionado às quadras do IFNMG Campus Salinas. Projeto criado para o desenvolvimento do trabalho final da disciplina de WEB II, do curso Bacharelado em Sistemas de Informação.",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "check": "find src -name '*.js' | xargs node --check",
+    "test": "vitest run"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Murynga/ReservaQuadras.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/Murynga/ReservaQuadras/issues"
+  },
+  "homepage": "https://github.com/Murynga/ReservaQuadras#readme"
+}
