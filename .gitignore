@@ -151,4 +151,5 @@ vite.config.ts.timestamp-*
 uploads/*
 !uploads/.gitkeep
 .env.*
+.envteste*
 !.env.example
