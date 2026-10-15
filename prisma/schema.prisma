@@ -1,0 +1,103 @@
+// Modelo baseado no DER do projeto (quadra_final.png)
+//
+// Usuario  --(especialização U)--> Admin | Aluno
+// Aluno    1 ---- N Reserva   (Faz)
+// Quadra   1 ---- N Reserva   (Contém)
+// Admin gerencia Reservas e Alunos (regra de acesso feita na camada de services/middlewares)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  // DATABASE_URL: conexão "pooled" do Neon (usada pela aplicação)
+  url       = env("DATABASE_URL")
+  // DIRECT_URL: conexão direta/sem pooler do Neon (usada pelo prisma migrate)
+  directUrl = env("DIRECT_URL")
+}
+
+enum Role {
+  ADMIN
+  ALUNO
+}
+
+enum StatusQuadra {
+  DISPONIVEL
+  INDISPONIVEL
+  MANUTENCAO
+}
+
+enum StatusReserva {
+  ATIVA
+  CANCELADA
+}
+
+model Usuario {
+  id                Int      @id @default(autoincrement())
+  nome              String
+  emailInstitucional String  @unique @map("email_institucional")
+  senha             String   // hash (bcrypt), nunca a senha em texto puro
+  role              Role     @default(ALUNO) // facilita autenticação/autorização via JWT
+  criadoEm          DateTime @default(now()) @map("criado_em")
+
+  aluno Aluno?
+  admin Admin?
+
+  @@map("usuarios")
+}
+
+// Especialização de Usuario: compartilha o mesmo id
+model Aluno {
+  usuarioId    Int    @id @map("usuario_id")
+  curso        String
+  numMatricula String @unique @map("num_matricula")
+
+  usuario  Usuario   @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  reservas Reserva[]
+
+  @@map("alunos")
+}
+
+// Especialização de Usuario: compartilha o mesmo id
+model Admin {
+  usuarioId Int @id @map("usuario_id")
+
+  usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@map("admins")
+}
+
+model Quadra {
+  id        Int          @id @default(autoincrement()) @map("id_quadra")
+  nome      String
+  local     String
+  descricao String?
+  foto      String?      // caminho/URL do arquivo enviado (upload)
+  status    StatusQuadra @default(DISPONIVEL)
+
+  reservas Reserva[]
+
+  @@map("quadras")
+}
+
+model Reserva {
+  id               Int           @id @default(autoincrement())
+  idAluno          Int           @map("id_aluno")
+  idQuadra         Int           @map("id_quadra")
+  data             DateTime      @db.Date            // dia da reserva
+  hora             String        @db.VarChar(5)      // início no formato "HH:mm"
+  duracao          Int                               // duração em minutos
+  descricao        String?
+  qtdParticipantes Int           @map("qtd_participantes")
+  status           StatusReserva @default(ATIVA)     // permite cancelar sem apagar o histórico
+  criadoEm         DateTime      @default(now()) @map("criado_em")
+
+  aluno  Aluno  @relation(fields: [idAluno], references: [usuarioId])
+  quadra Quadra @relation(fields: [idQuadra], references: [id])
+
+  // Acelera a checagem de conflito de horário por quadra/dia
+  @@index([idQuadra, data])
+  @@index([idAluno])
+  @@map("reservas")
+}
